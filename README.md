@@ -7,7 +7,8 @@
 2. pln_delete_unused_data.ipynb -> keeping rows matching document files
 3. pln_add_title_page.ipynb -> adding a new column for title_page = True/False
 4. pln_title_df.ipynb -> removing all columns except file_name and title_page
-5. 
+5. pln_image_downscaling.ipynb -> Preprocessed images for first training
+6. pln_binary_classification_title_page.ipynb
 
 
 ## Data Frames
