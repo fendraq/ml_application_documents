@@ -3,7 +3,7 @@ name = "examination-ai-application"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "ijson>=3.4.0",
     "jupyter>=1.1.1",
