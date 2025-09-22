@@ -10,7 +10,10 @@ This project is an exploration of how to prepare a large dataset for modeltraini
 5. pln_image_downscaling.ipynb -> Preprocessed images for faster training
 6. pln_mini_batch.ipynb -> Extracting 500 observations for exploratory model training with GridSearchCV
 7. pln_exploratory_model_training.ipynb -> Exploatory modeltraining av RandomForestClassifier, KNeighborsClassifier, SVC and LogistivRegression
-
+8. pln_exploratory_model_training_rfc.ipynb -> Using findings in pln_exploratory_model_training.ipynb to create both a data and a prediction pipeline for RFC
+9. pln_exploratory_model_training_knc.ipynb -> Using findings in pln_exploratory_model_training.ipynb to create both data and prediction pipeline
+10. pln_exploratory_model_training_svc.ipynb -> Using findings in pln_exploratory_model_training.ipynb to create both data and prediction pipeline
+11. pln_exploratory_model_training_lr.ipynb -> Using findings in pln_exploratory_model_training.ipynb to create both data and prediction pipeline
 
 
 ## Data Frames
