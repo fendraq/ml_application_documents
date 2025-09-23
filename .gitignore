@@ -32,4 +32,4 @@ Thumbs.db
 *.csv
 *.pkl
 data/
-saved_models/
+models/

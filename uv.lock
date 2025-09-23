@@ -393,6 +393,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "ijson" },
+    { name = "joblib" },
     { name = "jupyter" },
     { name = "matplotlib" },
     { name = "memory-profiler" },
@@ -408,6 +409,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "ijson", specifier = ">=3.4.0" },
+    { name = "joblib", specifier = ">=1.5.2" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "matplotlib", specifier = ">=3.10.6" },
     { name = "memory-profiler", specifier = ">=0.61.0" },
