@@ -54,13 +54,13 @@ def preprocessing_image_batch(image_folder, filenames, target_size):
         features = load_and_process_image(image_path, target_size)
         X[i, :] = features
 
-        if (i + 1) % 1000 == 0:
+        if (i + 1) % 100 == 0:
             print(f"Processed {i + 1}/{n_images} images")
     return X
 
 def main():
     df =  pl.read_parquet('../data/processed/labels/df_full_filtered_with_title.parquet')
-    filenames = df['file_name'].to_list()
+    filenames = df['file_name'].to_list()[:1000]
     image_folder = '../data/Pub_Lay_Net/documents'
     first_image_path = os.path.join(image_folder, filenames[0])
     target_size = image_size(first_image_path)
