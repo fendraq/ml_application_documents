@@ -40,8 +40,8 @@ knc.fit(X_trained_scaled, y_train)
 print("Training RFC")
 rfc.fit(X_trained_scaled, y_train)
 
-print("Setting threshold to 0.4")
-threshold = 0.4
+print("Setting threshold to 0.25")
+threshold = 0.25
 rfc_y_proba = rfc.predict_proba(X_test_scaled)[:, 1] 
 rfc_y_pred = (rfc_y_proba >= threshold).astype(int)
 
