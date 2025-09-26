@@ -1,0 +1,607 @@
+---
+title: "Classification of Title Pages in Texts"
+subtitle: "In the Pub Lay Net Dataset"
+author: "Peter Svensson"
+institute: "NBI/Handelsakademin"
+course: "AI – Theory and Application, MAI24MA"
+date: "2025-09"
+format: html
+---
+
+> **Note:** This document is a translation of the original Swedish report, generated with the assistance of GPT.
+
+# Abstract
+
+The purpose of this study is to explore how to preprocess and handle one seventh of the large Pub Lay Net dataset published by IBM, with the goal of finding a model that can predict whether a page in a text is a title page or not. The findings from this study show that it is important to reduce the size of the images when converting them to arrays, and at the same time only use a subset of the dataset when exploring which model gives the best results. The best balance between F1-score and fewest false positives when testing was achieved with an ensemble of Random Forest Classifier and K-Neighbor Classifier, where a positive prediction from either model was prioritized over a negative prediction, and a lower threshold of 0.4 for positives was used, resulting in higher recall.
+
+# Table of Contents
+
+- [1 Introduction](#introduction)
+- [2 Theory](#theory)
+    - [2.1 Evaluation Methods](#evaluation-methods)
+        - [2.1.1 Confusion Matrix](#confusion-matrix)
+        - [2.1.2 Precision and Recall](#precision-and-recall)
+        - [2.1.3 F1-score](#f1-score)
+    - [2.2 Classification Models](#classification-models)
+        - [2.2.1 RandomForestClassifier (RFC)](#randomforestclassifier-rfc)
+        - [2.2.2 KNeighborsClassifier (KNC)](#kneighborsclassifier-knc)
+        - [2.2.3 SupportVectorClassifier (SVC)](#supportvectorclassifier-svc)
+        - [2.2.4 LogisticRegressionCV (LR)](#logisticregressioncv-lr)
+    - [2.3 StandardScaler](#standardscaler)
+    - [2.4 GridSearchCV](#gridsearchcv)
+    - [2.5 COCO Annotation](#coco-annotation)
+    - [2.6 Image Conversion](#image-conversion)
+- [3 Method](#method)
+    - [3.1 The Pub Lay Net Dataset](#the-pub-lay-net-dataset)
+    - [3.2 Data Processing](#data-processing)
+    - [3.3 Image Processing](#image-processing)
+    - [3.4 Model Training](#model-training)
+        - [3.4.1 Exploratory Steps](#exploratory-steps)
+        - [3.4.2 Further Training with RFC and KNC](#further-training-with-rfc-and-knc)
+        - [3.4.3 Final Model](#final-model)
+- [4 Results and Discussion](#results-and-discussion)
+- [5 Conclusions](#conclusions)
+- [6 Self-Assessment](#self-assessment)
+- [References](#references)
+- [List of Figures](#list-of-figures)
+- [List of Tables](#list-of-tables)
+
+# 1 Introduction
+
+In professions that largely use software for work tasks, there is an increasing demand to automate workflows, whether it is filling in the same information in different documents, finding relevant documents in various systems, or managing emails. Many of these tasks could be simplified by, for example, some kind of AI agent that, through machine learning, can perform the repetitive and monotonous task instead of the user, who would then take a more supervisory role in cases where the AI agent is uncertain about a prediction. The purpose of a machine learning model is to learn to predict an observation, but it can rarely predict with 100 percent accuracy. However, a model that is well adapted to the task and has access to relevant and processed data could both predict well and alert the user to uncertainties. This is because there is generally too much trust that models predict correctly, regardless of whether it is an AI agent with a specific purpose or an LLM. This approach frees the user for other tasks that require the human factor, while giving them a more supervisory role in monotonous tasks. Based on this, it is therefore relevant to investigate how a model would need to be designed to handle texts from several different perspectives, starting with the simpler task of predicting texts and their title pages. Another relevant area is that texts need to be handled both for training a model and later for production use.
+
+The purpose of this report is to provide insight into how a large dataset—consisting of documents—could be processed, both to gain an understanding of the dataset and to be able to evaluate, with manageable model training time, which model or models provide the most correct predictions. To fulfill the purpose, the following research questions will be answered:
+
+1. How should a relatively large dataset consisting of scanned documents be processed so that a model can be trained on it?
+2. Which model or combination of models (*ensemble*) provides the highest F1-score while also having few *false negatives* when a model is to determine whether a page in a text is a title page or not?
+3. How are annotations used in connection with machine learning?
+
+# 2 Theory
+
+This section provides a brief summary of the models and other theory relevant to the study.
+
+## 2.1 Evaluation Methods
+
+There are several ways to evaluate how well a model predicts the outcome of unseen data (see [scikit-learn (2025a)](https://scikit-learn.org/stable/modules/model_evaluation.html) for a comprehensive list). The choice of evaluation metric depends, among other things, on the type of problem being addressed, how the dataset is structured, and its scope. In this study, three main evaluation metrics are used for classification problems: *confusion matrix*, *precision and recall*, and *F1-score*, which is based on the former. These are explained below.
+
+### 2.1.1 Confusion Matrix
+
+According to Prgomet, Johnson, Solberg, and Rundberg Streuli (2025, p. 155ff), the confusion matrix in classification problems is a way to visualize a trained model's ability to predict unseen data in relation to the true values (see Figure 2‑1). The matrix shows how many of the true values were correctly predicted as *True Positives* (TP) and *True Negatives* (TN), and incorrectly as *False Positives* (FP) and *False Negatives* (FN). Each row represents the true class and each column the predicted class.
+
+![](media/cm_explained.png){width=600px}
+
+*Figure 2‑1 - Confusion Matrix*
+
+### 2.1.2 Precision and Recall
+
+Precision and recall are two evaluation metrics that give the proportion of "positive predictions that are actually correct" and the proportion of "the positive class that is correctly predicted" (Prgomet et al., 2025), calculated as:
+
+$$
+Precision = \frac{TP}{TP + FP}
+$$
+
+$$
+Recall = \frac{TP}{TP + FN}
+$$
+
+These metrics have a trade-off relationship, which generally means that higher recall leads to lower precision and vice versa. The trade-off is controlled by a threshold, which is initially assumed to be 0.5, i.e., the probability that a data point belongs to one class or the other is 50 percent. By lowering the threshold, the number of TPs increases and FNs decrease at the cost of more FPs—values that in reality do not belong to the positive class. Thus, recall increases and precision decreases: more FPs give lower precision, while fewer FNs give higher recall. The choice of threshold depends on the purpose of the model. Two common examples are *detecting cancer* and *detecting financial corruption*. In the first case, it is better for more people to be called for examination: more who actually have cancer are detected (TP), and a few more are told they do not have cancer (FN)—higher recall is desirable. In the second case, it is better for information sent to the police (TP) to be more certain, given the resources required to investigate the case—higher precision is desirable.
+
+### 2.1.3 F1-score
+
+Prgomet et al. (2025, p. 162) explain the F1-score as "the harmonic mean of precision and recall," calculated as:
+
+$$
+F1 = \frac{2TP}{2TP + 2FP + 2FN}
+$$
+
+For the F1-score to be high, both precision and recall must be high. Figure 2‑2 gives an example of how the F1-score is calculated in relation to a binary classification problem. It shows that for each class, the F1-score is calculated based on precision and recall, while *macro avg* gives an average for the classes' predictions.
+
+![](media/f1-score_example.png){width=350px}
+
+*Figure 2‑2: Example of F1-score*
+
+## 2.2 Classification Models
+
+This section provides an overview of the models used in the study.
+
+### 2.2.1 RandomForestClassifier (RFC)
+
+RFC is described by scikit-learn (2025b) as a meta-estimator (or ensemble) that trains a certain number of decision trees. A decision tree consists of nodes, with the first and topmost called the root node, leading to inner nodes and finally the outermost nodes, the leaf nodes. The model uses a threshold, and if the observation is greater than or equal to the threshold, it evaluates to true and the model goes left; for false, it goes right. The model's hyperparameters have default values but can be changed to adapt the model to the purpose and to regularize it. More decision trees (*n_estimators*) can give better and more stable results but also increase training time. *max_depth* sets how deep the tree can grow, and the minimum number of samples each node must contain is set by *min_samples_split*. Deeper trees and fewer samples per node can lead to overfitting but also allow the model to find more complex patterns in the data.
+
+*Table 2‑1: Selected hyperparameters for RandomForestClassifier*
+
+| Hyperparameter (default) | Description |
+| --- | --- |
+| n_estimators=100 | Number of decision trees in the model |
+| max_depth=None | Maximum depth for each tree |
+| min_samples_split=2 | Minimum number of samples per node |
+
+### 2.2.2 KNeighborsClassifier (KNC)
+
+According to scikit-learn (2025c), KNC, unlike RandomForestClassifier, compares each observation with the other observations, calculates the distance to them, and classifies the observation to the class most common among the nearest observations (neighbors) through "majority voting." The hyperparameter *n_neighbors* determines how many neighbor observations to consider in the classification, and *weights* determines how much they influence the result: *uniform* means all neighbors have equal influence, while *distance* means closer neighbors have more influence.
+
+*Table 2‑2: Selected hyperparameters for KNeighborsClassifier*
+
+| Hyperparameter (default) | Description |
+| --- | --- |
+| n_neighbors=5 | Number of neighbor observations used in "voting" |
+| weights='uniform' | Weight function used in predictions |
+| metric='minkowski' | Distance metric used in calculations |
+
+### 2.2.3 SupportVectorClassifier (SVC)
+
+Prgomet (2025, p.176ff) summarizes that the goal of an SVC is to find as wide a "path" as possible between data points from two different classes. In an SVC, a "path" is a decision boundary with a support vector on each side, where the margin is set relative to the nearest data point from each class. According to scikit-learn (2025d), the model can be regularized with *svc_c*, where a high value makes the model try to classify more training data correctly, resulting in a narrower margin from the decision boundary. A lower value allows more misclassifications, giving a wider margin. *kernel* can be set to linear or non-linear depending on the complexity of the data.
+
+*Table 2‑3: Selected hyperparameters for SVC*
+
+| Hyperparameter (default) | Description |
+| --- | --- |
+| svc_c=1.0 | Regularization parameter |
+| kernel='rbf' | Kernel type used in the algorithm |
+
+### 2.2.4 LogisticRegressionCV (LR)
+
+According to Prgomet (2025, p.168), LR in classification is a model that estimates the probability that a data point belongs to a certain class. The model uses cross-validation to test several different values for the regularization parameter. To have stronger regularization, a lower value is set in *Cs*. *penalty* specifies the type of regularization used, and *solver* specifies the algorithm used to find the best parameters.
+
+*Table 2‑4: Selected hyperparameters for LogisticRegressionCV*
+
+| Hyperparameter (default) | Description |
+| --- | --- |
+| Cs=10 | Regularization strength |
+| max_iter=100 | Maximum number of iterations for the algorithm |
+| penalty='l2' | Norm for penalty |
+| solver='lbfgs' | Algorithm used for optimization |
+
+## 2.3 StandardScaler
+
+StandardScaler normalizes the independent variables in the dataset by removing the mean and scaling to a variance of 1. Thus, they get a mean of 0 and a variance of 1. To avoid data leakage between training and test data, the training data is used with the *fit_transform* method, while the test data only uses *transform*. Some models are more sensitive to whether the data is normalized, including Support Vector Machines such as SVC (scikit-learn 2025e).
+
+## 2.4 GridSearchCV
+
+GridSearchCV, according to scikit-learn (2025f), is a method for finding the optimal hyperparameters for one or more models. By providing the method with a grid of different hyperparameters for a model, GridSearchCV uses cross-validation to test which combination of hyperparameters gives the best result for that dataset.
+
+## 2.5 COCO Annotation
+
+Labelformat (2025) summarizes COCO (Common Objects in Context) annotation as a large-scale object detection format developed by Microsoft. The format has become an accepted standard for object detection and is written in JSON files. The format has three main components:
+
+- *Images*, which define metadata for each image in the dataset, such as the image's filename and size in pixels.
+- *Categories*, which define object classes, such as title, text, figure, table.
+- *Annotations*, which define where an object is located and its size, both rectangular and polygonal.
+
+## 2.6 Image Conversion
+
+To use images (e.g., in jpg format) for model training, they need to be converted in several steps. Here is a brief summary of the most important steps:
+
+1. Convert images to grayscale.
+2. Resize images for faster processing and to ensure the matrices do not take up too much space. This naturally depends on the size of the dataset.
+3. Normalize pixel values from 0-255 to 0-1, to give a machine learning model better conditions and to ensure all features have equal importance during training.
+4. Flatten the matrix from two dimensions to one.
+
+*(Datacamp 2025, DevashishPrasad 2021, and scikit-learn 2025g)*
+
+# 3 Method
+
+This section summarizes the conditions of the chosen dataset and how it was processed, how the images were prepared for model training, and the steps taken during model training. Some references in this section are to the project's published repository on GitHub, with reference to Svensson (2025) and relevant filenames.
+
+## 3.1 The Pub Lay Net Dataset
+
+The Pub Lay Net dataset was developed and published by IBM and consists of document images with articles published in the PubMed Central Open Access Subset. Each image has annotations indicating where in the document the title, text, figures, tables, and lists are located. The annotation is done according to the COCO format mentioned in 2.5. Initially, the dataset had over 335,000 documents and over 3 million annotations (Prasad 2021). The dataset used in this study is from Kaggle.com and is one seventh of the original, consisting of just under 48,000 documents. An example of the annotations is shown in Table 3‑1 below. For clarity, I have removed the row with data types and the columns *iscrowd*, *image_id*, *height*, *width*, and *supercategory*, which are less important for the purpose of the study. The meaning of the columns is:
+
+- *segmentation* gives a list of polygon coordinates, which define the exact pixel boundaries for the category in question.
+- *area* shows the segment's area.
+- *bbox* gives the smallest rectangle enclosing the object, measured from the upper left corner.
+- *category_id* indicates which category the object belongs to, defined in Category.
+- *id* is the unique identifier for each annotation.
+- *file_name* indicates which document the observation belongs to.
+- *name* indicates which category the category_id belongs to.
+
+*Table 3‑1: Example of annotations for the dataset*
+
+| segmentation | area | bbox | category_id | id | file_name | name |
+| --- | --- | --- | --- | --- | --- | --- |
+| [[52.38, 444.87, … 444.87]] | 13787.43308252503600 | [40.42, 444.87, … 63.86] | 1 | 0 | "PMC3866684_00003.jpg" | "text" |
+
+## 3.2 Data Processing
+
+The first step to using the dataset was to convert the JSON file with annotations. Since it had not been adapted to the number of documents included, it was very large and needed to be converted in steps. This required using polars and ijson instead of pandas and json, as these are better at handling large datasets. The conversion also had to be done in segments for the hardware to manage it. Then, rows without an associated image had to be removed from the dataframe, which was done with a script that checked which filenames were available and filtered the dataframe accordingly (Svensson 2025 – pln_data_preprocessing.py and pln_delete_unused_data.ipynb). This resulted in 465,836 of 3,263,046 rows being retained.
+
+Since one of the purposes of the study was to train a model that can determine whether a page is a title page or not, the dataframe needed to be supplemented with this information, as it was missing from the start. The filename indicated whether a page was a title page: title pages had the suffix 00000, while other pages had a number greater than 0 at the end. By reading the files, the *title_page* column with 1 (True) and 0 (False) could be added (pln_add_title_page.ipynb). The dataframe was then cleaned of data not needed for the binary problem (pln_title_df.ipynb), resulting in a dataframe with two columns: file_name (str) and title_page (bool).
+
+Finally, a sample of 500 observations was taken to enable faster model training in the exploratory step, where models were compared. The sample was stratified, as title pages are underrepresented in the dataset (pln_mini_batch.ipynb).
+
+## 3.3 Image Processing
+
+When processing the images, the steps mentioned in 2.6 were followed by first converting them to grayscale. Since the goal was to train a model on all documents, all images were also resized to 128x128 pixels from the original 612x792 pixels, to enable faster model training on the entire dataset. The pixel values were then normalized from 0-255 to 0-1. Finally, the array was flattened to a one-dimensional array. To see what the images looked like after conversion, a visualization was also made, shown in Figure 3‑1 (pln_image_downscaling.ipynb).
+
+![](media/converted_picures.png){width=600px}
+
+*Figure 3‑1: Converted images*
+
+A script was also created to convert all images while retaining their original size, which had to be done with a sample of 1,000 images, as converting all images would have resulted in an array of about one terabyte, which was not feasible (pln_image_konverting.py).
+
+## 3.4 Model Training
+
+This section is divided into two parts: the exploratory steps performed with several different models on the sample of 500 observations, and the best-performing models and how they were used further. For results, see Results and Discussion.
+
+### 3.4.1 Exploratory Steps
+
+The exploratory steps were performed, as mentioned, on the smaller sample of the dataset. The models used in this step were KNC, RFC, SVC, and LR, which are explained in 2.2. The dataset was split into training and test data for both X and y with stratification, as title pages are underrepresented. The training data was then normalized with StandardScaler and its fit_transform method, which was also applied to the test data with transform. To find the best-performing hyperparameters for each model, a dictionary was created that included the models and the hyperparameters to be evaluated, which were then used in GridSearchCV. Based on the results in F1-score, recall, and precision, as well as the confusion matrix, a comparison was made between the different models and how a lower threshold affected the results of RFC and KNC. For the former, feature importance was also visualized. (Svensson 2025 – pln_exploratory_model_training.ipynb).
+
+### 3.4.2 Further Training with RFC and KNC
+
+The two best-performing models, RFC and KNC, were further explored to see how the threshold could be set for better results and how they performed when the outcome of feature importance was implemented by keeping only the top 40 rows in each observation (pln_exploratory_model_training_knc.ipynb and pln_exploratory_model_training_rfc.ipynb). These models were then combined in a pipeline to evaluate which observations they predicted correctly, first through VotingClassifier and then by creating an ensemble of the two models' positive predictions, where a positive prediction from either model was prioritized over a negative prediction (pln_observation_prediction_knc_rfc.ipynb).
+
+### 3.4.3 Final Model
+
+The final model was compiled in two Python scripts, one with PCA and one without, to compare their performance and to have an option for faster training. The final models included, in addition to the data processing already done:
+
+- Keeping the top 40 rows of the image
+- Strategic splitting of training and test data
+- Normalization of training and test data
+- Training KNC with the hyperparameters metric='minkowski', n_neighbors=2, weights='distance', and other hyperparameters at default values
+- Training RandomForestClassifier with the hyperparameters max_depth=None, min_sample_split=5, n_estimators=150, and other hyperparameters at default values
+- Threshold = 0.4
+- Ensemble prediction where a positive prediction was prioritized over a negative prediction
+
+*(pln_first_page_model_128x128.py and pln_first_page_model_128x128_pca)*
+
+# 4 Results and Discussion
+
+In the first training round in the exploratory step, the models gave the following results:
+
+**Table 4‑1: RFC first training**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.52     |
+| Not title page | 0.95   |
+| Mean         | 0.73     |
+:::
+
+::: {.column}
+![](media/cm_1_rcf.png){width=250px}
+:::
+
+:::
+
+**Table 4‑2: KNC first training**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.67     |
+| Not title page | 0.96   |
+| Mean         | 0.81     |
+:::
+
+::: {.column}
+![](media/cm_1_knc.png){width=250px}
+:::
+
+:::
+
+**Table 4‑3: SVC first training**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.32     |
+| Not title page | 0.94   |
+| Mean         | 0.63     |
+:::
+
+::: {.column}
+![](media/cm_1_svc.png){width=250px}
+:::
+
+:::
+
+**Table 4‑4: LR first training**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.43     |
+| Not title page | 0.94   |
+| Mean         | 0.69     |
+:::
+
+::: {.column}
+![](media/cm_1_lr.png){width=250px}
+:::
+
+:::
+
+From the results above, it can be concluded that the LR and SVC models performed much worse than RFC and KNC. Therefore, I chose to continue with the latter two.
+
+As mentioned above, feature importance was also performed for RFC, visualized in Figure 4‑1. It is clear that the pixel rows between row 0 and 40 are more important than the others. Therefore, only rows 0-40 were kept when the models were to classify an image as a title page or not.
+
+![](media/heat_map_features.png){width=350px}
+
+*Figure 4‑1: Feature importance, RandomForestClassifier*
+
+The next step was to test which thresholds gave better results. The premise was that it is better for the model to find more title pages, even if a few more non-title pages are misclassified, as in the precision and recall trade-off. Three thresholds were tested with RFC, giving the following results:
+
+**Table 4‑5: RFC with adjusted threshold**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.88     |
+| Not title page | 0.98   |
+| Mean         | 0.93     |
+:::
+
+::: {.column}
+![](media/cm_rfc_t02.png){width=350px}
+:::
+
+:::
+
+**Table 4‑6: RFC with adjusted threshold**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.89     |
+| Not title page | 0.98   |
+| Mean         | 0.94     |
+:::
+
+::: {.column}
+![](media/cm_rfc_t03.png){width=350px}
+:::
+
+:::
+
+**Table 4‑7: RFC with adjusted threshold**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.75     |
+| Not title page | 0.97   |
+| Mean         | 0.89     |
+:::
+
+::: {.column}
+![](media/cm_rfc_t04.png){width=350px}
+:::
+
+:::
+
+The results show that a threshold of 0.3 for RFC gives the most stable result. The same was done with KNC, giving the following results:
+
+**Table 4‑8: KNC with adjusted threshold**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.77     |
+| Not title page | 0.97   |
+| Mean         | 0.86     |
+:::
+
+::: {.column}
+![](media/cm_knc_t02.png){width=350px}
+:::
+
+:::
+
+**Table 4‑9: KNC with adjusted threshold**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.75     |
+| Not title page | 0.97   |
+| Mean         | 0.86     |
+:::
+
+::: {.column}
+![](media/cm_knc_t05.png){width=350px}
+:::
+
+:::
+
+**Table 4‑10: KNC with adjusted threshold**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.42     |
+| Not title page | 0.94   |
+| Mean         | 0.68     |
+:::
+
+::: {.column}
+![](media/cm_knc_t06.png){width=350px}
+:::
+
+:::
+
+As can be seen, when evaluating different thresholds for KNC, the model is not as sensitive, and it is only when the threshold exceeds 0.5 that the results worsen. In the range 0.1-0.5, the model gives similar results.
+
+A final exploratory step was to see how these two models could be combined into a final model. The idea was to leverage each model's strengths, i.e., let a final model take predictions from the model that predicted them correctly. This was visualized as follows:
+
+![](media/pred_knc_rfc.png){width=600px}
+
+*Figure 4‑2: Predictions from RFC and KNC*
+
+It can be seen that neither model could correctly predict observation 9 or 34, while RFC could correctly predict observation 10, 14, and 72, which KNC predicted incorrectly, and only KNC correctly predicted observation 79. Based on this, it can be assumed that a combined model could benefit from each model's positive predictions, i.e., the cases where they predicted a page as a title page. As mentioned above in 3.4.2, a Voting model was tested but did not perform much better than each individual model. Therefore, an ensemble model was instead tested, in which each model's positive prediction was prioritized over a negative prediction, giving the following results:
+
+**Table 4‑11: KNC and RFC ensemble results with threshold 0.3**
+
+::: {layout="[[50,50]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.52     |
+| Not title page | 0.95   |
+| Mean         | 0.73     |
+:::
+
+::: {.column}
+![](media/cm_1_rcf.png){width=250px}
+:::
+
+:::
+
+When the final model was trained on all data, I had to change the threshold to 0.4, as 0.25 gave the following:
+
+**Table 4‑12: KNC and RFC ensemble results with threshold 0.25**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.92     |
+| Not title page | 0.99   |
+| Mean         | 0.96     |
+:::
+
+::: {.column}
+![](media/cm_knc_rfc_t025_final.png){width=350px}
+:::
+
+:::
+
+**Table 4‑13: KNC and RFC ensemble results with threshold 0.4**
+
+::: {layout="[[60,40]]"}
+
+::: {.column}
+| Class        | F1-score |
+|--------------|----------|
+| Title page   | 0.96     |
+| Not title page | 0.99   |
+| Mean         | 0.98     |
+:::
+
+::: {.column}
+![](media/cm_knc_rfc_t04_final.png){width=350px}
+:::
+
+:::
+
+With the first threshold of 0.25, many non-title pages were predicted as title pages, and by testing different thresholds, 0.4 became a balanced model.
+
+# 5 Conclusions
+
+Of the three initial research questions, two are answered in this study:
+
+1. How should a relatively large dataset consisting of scanned documents be processed so that a model can be trained on it?
+2. Which model or combination of models (*ensemble*) provides the highest F1-score while also having few *false negatives* when a model is to determine whether a page in a text is a title page or not?
+
+The answer to the first question is "it depends," especially regarding the conditions of the dataset, such as size, purpose, and time required. But generally, as shown in the report, the dataset needs to be explored to determine which data is relevant, such as the top 40 rows for titles. Then, the images need to be converted to arrays so that a machine learning model can understand the data representing the image, while each pixel is simplified but still provides enough information for the model.
+
+For the second question, I started with four models and some other tools like GridSearch and PCA, but a combination of models gave a better result, and in this case and with this type of data, it was RFC and KNC with an ensemble prediction, where a model's positive prediction was prioritized over a negative one.
+
+The goal was also to answer the third question:
+
+3. How are annotations used in connection with machine learning?
+
+But due to time constraints, this was not completed. However, this is something I will continue to work on in future projects. Additional improvements could include scaling down the annotations to fit the 128x128 format, as converting images to arrays in full size requires a lot of RAM and HDD space. The model could also be improved by having the script handle uncertain predictions in some way, i.e., those predictions that end up as FNs. It would also be interesting to further examine the predictions that end up in the ensemble prediction, where the models do not agree.
+
+# 6 Self-Assessment
+
+1. What was the most enjoyable part of the assignment?
+
+Finding solutions to problems I did not know I would encounter from the start, such as how much HDD space a large dataset can take up when converted to an array, depending on the size of the original image. Many problems had to be solved in connection with data handling, both regarding the scope of images and annotations.
+
+2. What grade do you think you deserve and why?
+
+VG: I believe that with this examination, I have demonstrated the knowledge required to meet the criteria for VG in the course:
+
+- Ability to reason about the choice of solution method
+- Reflect and analyze to solve problems with high certainty based on conditions, risks, limitations, effects, results, and improvement opportunities.
+
+3. What was the most challenging part of the work and how did you handle it?
+
+The amount of concepts, not only the theoretical ones in ML but also the details of all the tools introduced, from how a model in scikit-learn works with all hyperparameters to all the ways to evaluate a model depending on the problem type.
+
+4. How did the group work go?
+
+I did not work much in a group, but the discussions went well.
+
+\m/
+
+# References
+
+Datacamp (2025): [https://www.datacamp.com/doc/numpy/converting-images-to-numpy](https://www.datacamp.com/doc/numpy/converting-images-to-numpy)
+
+DevashishPrasad (2021): [https://github.com/DevashishPrasad/CascadeTabNet](https://github.com/DevashishPrasad/CascadeTabNet)
+
+Labelformat (2025): [https://labelformat.com/formats/object-detection/coco/](https://labelformat.com/formats/object-detection/coco/)
+
+Prgomet, A., Johnson, T., Solberg, A. & Rundberg Streuli, L. (2025). Lär dig AI från grunden – Tillämpad maskininlärning med Python.
+
+Prasad, Devashish (2021): [https://www.kaggle.com/datasets/devashishprasad/documnet-layout-recognition-dataset-publaynet-t0/data](https://www.kaggle.com/datasets/devashishprasad/documnet-layout-recognition-dataset-Pub Lay Net-t0/data)
+
+scikit-learn (2025a): [https://scikit-learn.org/stable/modules/model_evaluation.html](https://scikit-learn.org/stable/modules/model_evaluation.html)
+
+scikit-learn (2025b): [https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier)
+
+scikit-learn (2025c): [https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn.neighbors.KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn.neighbors.KNeighborsClassifier)
+
+scikit-learn (2025d): [https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC)
+
+scikit-learn (2025e): [https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn.preprocessing.StandardScaler](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn.preprocessing.StandardScaler)
+
+scikit-learn (2025f): [https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html)
+
+scikit-learn (2025g): [https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html](https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html)
+
+Svensson, Peter (2025): [https://github.com/fendraq/ml_application_documents.git](https://github.com/fendraq/ml_application_documents.git)
+
+# List of Figures
+
+- [Figure 2‑1 - Confusion Matrix](#_Ref209601776)
+- [Figure 2‑2: Example of F1-score](#_Ref209773955)
+- [Figure 3‑1: Converted images](#_Ref209694525)
+- [Figure 4‑1: Feature importance, RandomForestClassifier](#_Toc209780323)
+- [Figure 4‑2: Predictions from RFC and KNC](#_Toc209780324)
+
+# List of Tables
+
+- [Table 2‑1: Selected hyperparameters for RandomForestClassifier](#_Toc209780486)
+- [Table 2‑2: Selected hyperparameters for KNeighborsClassifier](#_Toc209780487)
+- [Table 2‑3: Selected hyperparameters for SVC](#_Toc209780488)
+- [Table 3‑1: Example of annotations for the dataset](#_Ref209689973)
+- [Table 4‑1: RFC first training](#_Toc209780490)
+- [Table 4‑2: KNC first training](#_Toc209780491)
+- [Table 4‑3: SVC first training](#_Toc209780492)
+- [Table 4‑4: LR first training](#_Toc209780493)
+- [Table 4‑5: RFC with adjusted threshold](#_Toc209780494)
+- [Table 4‑6: RFC with adjusted threshold](#_Toc209780495)
+- [Table 4‑7: RFC with adjusted threshold](#_Toc209780496)
+- [Table 4‑8: KNC with adjusted threshold](#_Toc209780497)
+- [Table 4‑9: KNC with adjusted threshold](#_Toc209780498)
+- [Table 4‑10: KNC with adjusted threshold](#_Toc209780499)
+- [Table 4‑11: KNC and RFC ensemble results with threshold 0.3](#_Toc209780500)
+- [Table 4‑12: KNC and RFC ensemble results with threshold 0.25](#_Toc209780501)
+- [Table 4‑13: KNC and RFC ensemble results with threshold 0.4](#_Toc209780502)

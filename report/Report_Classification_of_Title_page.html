@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.24">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Peter Svensson">
+<meta name="dcterms.date" content="2025-09-01">
+
+<title>Klassificering av förstasidor i texter</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="Report_Classification_of_Title_page_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Report_Classification_of_Title_page_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Report_Classification_of_Title_page_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Report_Classification_of_Title_page_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="Report_Classification_of_Title_page_files/libs/quarto-html/popper.min.js"></script>
+<script src="Report_Classification_of_Title_page_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Report_Classification_of_Title_page_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Report_Classification_of_Title_page_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Report_Classification_of_Title_page_files/libs/quarto-html/quarto-syntax-highlighting-dc55a5b9e770e841cd82e46aadbfb9b0.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Report_Classification_of_Title_page_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Report_Classification_of_Title_page_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Report_Classification_of_Title_page_files/libs/bootstrap/bootstrap-c36fa1659e66718328add8225e5b94d5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Klassificering av förstasidor i texter</h1>
+<p class="subtitle lead">I datamängden Pub Lay Net</p>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">Peter Svensson </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            NBI/Handelsakademin
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 1, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="abstract" class="level1">
+<h1>Abstract</h1>
+<p>The purpose of this study is to explore how to preprocess and handle one seventh of the large dataset of Pub Lay Net published by IBM with the goal of finding a model that can predict if a page in a text is a title page or not. The findings from this study show that it is important to reduce the size of the images when converting them to arrays, and at the same time only use a subset of the dataset when exploring which model gives the best results. The best balance between F1-score and fewest false positives when testing was an ensemble of Random Forest Classifier and K-Neighbor Classifier, where a positive prediction from either model was prioritized over negative prediction and using a lower threshold of 0.4 for positives, resulting in higher recall.</p>
+</section>
+<section id="innehållsförteckning" class="level1">
+<h1>Innehållsförteckning</h1>
+<ul>
+<li><a href="#inledning">1 Inledning</a></li>
+<li><a href="#teori">2 Teori</a>
+<ul>
+<li><a href="#utvärderingsmetoder">2.1 Utvärderingsmetoder</a>
+<ul>
+<li><a href="#confusion-matrix">2.1.1 Confusion Matrix</a></li>
+<li><a href="#precision-och-recall">2.1.2 Precision och recall</a></li>
+<li><a href="#f1-score">2.1.3 F1-score</a></li>
+</ul></li>
+<li><a href="#klassifikationsmodeller">2.2 Klassifikationsmodeller</a>
+<ul>
+<li><a href="#randomforestclassifier-rfc">2.2.1 RandomForestClassifier (RFC)</a></li>
+<li><a href="#kneighborsclassifier-knc">2.2.2 KNeighborsClassifier (KNC)</a></li>
+<li><a href="#supportvectorclassifier-svc">2.2.3 SupportVectorClassifier (SVC)</a></li>
+<li><a href="#logisticregressioncv-lr">2.2.4 LogisticRegressionCV (LR)</a></li>
+</ul></li>
+<li><a href="#standardscaler">2.3 StandardScaler</a></li>
+<li><a href="#gridsearchcv">2.4 GridSearchCV</a></li>
+<li><a href="#coco-annotering">2.5 COCO-annotering</a></li>
+<li><a href="#bildkonvertering">2.6 Bildkonvertering</a></li>
+</ul></li>
+<li><a href="#metod">3 Metod</a>
+<ul>
+<li><a href="#datamängden-pub-lay-net">3.1 Datamängden Pub Lay Net</a></li>
+<li><a href="#databearbetning">3.2 Databearbetning</a></li>
+<li><a href="#bildbearbetning">3.3 Bildbearbetning</a></li>
+<li><a href="#modellträning">3.4 Modellträning</a>
+<ul>
+<li><a href="#utforskande-steg">3.4.1 Utforskande steg</a></li>
+<li><a href="#vidare-träning-med-rfc-och-knc">3.4.2 Vidare träning med RFC och KNC</a></li>
+<li><a href="#slutgiltig-modell">3.4.3 Slutgiltig modell</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#resultat-och-diskussion">4 Resultat och Diskussion</a></li>
+<li><a href="#slutsatser">5 Slutsatser</a></li>
+<li><a href="#självutvärdering">6 Självutvärdering</a></li>
+<li><a href="#källförteckning">Källförteckning</a></li>
+<li><a href="#figurförteckning">Figurförteckning</a></li>
+<li><a href="#tabellförteckning">Tabellförteckning</a></li>
+</ul>
+</section>
+<section id="inledning" class="level1">
+<h1>1 Inledning</h1>
+<p>I yrken som till stor del använder mjukvara till arbetsuppgifter ökar efterfrågan på att automatisera flöden, om det så är att fylla i samma information i olika dokument, hitta relevant dokument i olika system eller hantera e-postmeddelanden. Många av dessa arbetsuppgifter skulle kunna förenklas genom bland annat någon sorts AI-agent som genom maskininlärning kan genomföra den repetitiva och monotona uppgiften istället för användaren, vilken då skulle få en mer kontrollerande roll i de fall en AI-agent är osäker på en prediktion. En maskininlärningsmodells syfte är att lära sig att prediktera en observation, men sällan kan den prediktera 100 procent korrekt. Men en modell som är väl anpassad till uppgiftens syfte och har tillgång till relevant och bearbetad data skulle både kunna prediktera väl och uppmärksamma användaren på osäkerheter. Detta eftersom det generellt finns en för stor tilltro till att modeller predikterar korrekt, oavsett om det är en AI-agent med ett specifikt syfte eller en LLM. Det här tillvägagångssätt frigör användaren för andra arbetsuppgifter som kräver den mänskliga faktorn, samtidigt som hen ges en mer kontrollerande roll inom monotona arbetsuppgifter. Utifrån detta är det därför relevant att undersöka hur en modell skulle behöva utformas för att hantera texter utifrån flera olika perspektiv, med start i det enklare, som att prediktera texter och dess förstasidor. Ett andra relevant område är texter ska hanteras både för att träna en modell men också sedan användas vid produktionssättning.</p>
+<p>Syftet med den här rapporten är att ge en inblick i hur en stor datamängd - bestående av dokument - skulle kunna bearbetas, dels för att få en förståelse för datamängden, dels för att med hanterbar modellträningstid kunna utvärdera vilken eller vilka modeller som ger högst korrekta prediktioner. För att uppfylla syftet kommer följande frågeställningar att besvaras:</p>
+<ol type="1">
+<li>Hur bör en förhållandevis stor datamängd bestående av inskannade dokument bearbetas, så att en modell kan tränas på den?</li>
+<li>Vilken modell eller kombination av modeller (<em>ensemble</em>) ger högst f1-score men samtidigt få <em>falska negativa</em> när en modell ska avgöra om en sida i en text är förstasida eller inte?</li>
+<li>Hur använder man annotationer i samband med maskininlärning?</li>
+</ol>
+</section>
+<section id="teori" class="level1">
+<h1>2 Teori</h1>
+<p>I det här avsnittet ges en kort sammanfattning av modeller och annan teori som är relevant för undersökningen.</p>
+<section id="utvärderingsmetoder" class="level2">
+<h2 class="anchored" data-anchor-id="utvärderingsmetoder">2.1 Utvärderingsmetoder</h2>
+<p>För maskininlärning finns flera olika sätt att utvärdera hur väl en modell predikterar utfall av osedd data (se <a href="https://scikit-learn.org/stable/modules/model_evaluation.html">scikit-learn (2025a)</a> för en utförlig lista). Val av utvärderingsmått beror bl.a. på vilken typ av problem som behandlas men också hur datamängden är uppbyggd samt dess omfattning. I den här undersökningen används i huvudsak tre utvärderingsmått inom klassificeringsproblematiken: <em>confusion matrix och precision och recall</em> tillsammans med <em>F1-score</em>, som bygger på den förstnämnda, vilka förklaras nedan.</p>
+<section id="confusion-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="confusion-matrix">2.1.1 Confusion Matrix</h3>
+<p>Enligt Prgomet, Johnson, Solberg och Rundberg Streuli (2025 s. 155ff) är confusion matrix inom klassificeringsproblem ett sätt att visualisera en tränad modells förmåga att prediktera osedd data i förhållande till de sanna värdena (se Figur 2‑1). Matrisen visar hur många av de sanna värdena som predikterades rätt i <em>True Positives</em> (TP) och <em>True Negatives</em> (TN) respektive fel <em>False Positives</em> (FP) och <em>False Negatives</em> (FN). Varje rad representerar den sanna klassen och varje kolumn den predikterade klassen.</p>
+<p><img src="media/cm_explained.png" class="img-fluid" width="600"></p>
+<p><em>Figur 2‑1 - Confusion Matrix</em></p>
+</section>
+<section id="precision-och-recall" class="level3">
+<h3 class="anchored" data-anchor-id="precision-och-recall">2.1.2 Precision och recall</h3>
+<p>Precision och recall är två utvärderingsmått som ger andelen ”positiva prediktioner som faktiskt är korrekta” respektive andelen ”av den positiva klassen som predikteras korrekt” (Prgomet et.al. 2025) och som beräknas utifrån formlerna:</p>
+<p><span class="math display">\[
+Precision = \frac{TP}{TP + FP}
+\]</span></p>
+<p><span class="math display">\[
+Recall = \frac{TP}{TP + FN}
+\]</span></p>
+<p>Dessa utvärderingsmått har ett avvägande samband, vilket generellt ger att en högre recall leder till en lägre precision och tvärt om. Avvägningen av utvärderingsmåtten görs med ett tröskelvärde, som från början antas vara 0.5, alltså att sannolikheten att en datapunkt tillhör den ena eller andra klassen är 50 procent men genom att sänka tröskelvärdet ökar antalet TP och FN minskar mot kostnaden att antalet FP ökar – värden som alltså i verkligheten inte tillhör den positiva klassen. Utifrån formlerna syns alltså att recall i det här fallet ökar och precision minskar: Fler FP ger en lägre precision medan färre FN ger en högre recall. Avvägningen med ett tröskelvärde beror på syftet med modellen. Två vanliga syften som brukar exemplifieras är <em>att upptäcka cancer</em> och <em>att upptäcka ekonomisk korruption</em>. I det första fallet är det bättre att fler personer kallas till undersökning: fler som faktiskt har cancer upptäcks (TP) och några fler som får beskedet att de inte har cancer (FN) – högre recall är önskvärt. I det andra fallet är det bättre att information som skickas vidare till polisen (TP) är mer säker med tanke på resurser som går åt att utreda fallet – högre precision är önskvärt.</p>
+</section>
+<section id="f1-score" class="level3">
+<h3 class="anchored" data-anchor-id="f1-score">2.1.3 F1-score</h3>
+<p>Prgomet et.al. (2025 s. 162) förklarar F1-score som ”det harmoniska medelvärdet för precision och recall” och beräknas med formeln:</p>
+<p><span class="math display">\[
+F1 = \frac{2TP}{2TP + 2FP + 2FN}
+\]</span></p>
+<p>För att F1 ska vara högt behöver alltså både precision och recall vara höga. I Figur 2‑2 ges ett exempel på hur F1-score beräknas i förhållande till ett binärt klassificeringsproblem. Där syns att för varje klass beräknas F1-score baserat på precision och recall samtidigt som <em>macro avg</em> ger ett medelvärde för klassernas prediktioner.</p>
+<p><img src="media/f1-score_example.png" class="img-fluid" width="350"></p>
+<p><em>Figur 2‑2: Exempel på F1-score</em></p>
+</section>
+</section>
+<section id="klassifikationsmodeller" class="level2">
+<h2 class="anchored" data-anchor-id="klassifikationsmodeller">2.2 Klassifikationsmodeller</h2>
+<p>I det här avsnittet ger jag en övergripande förklaring av de modeller som används i undersökningen.</p>
+<section id="randomforestclassifier-rfc" class="level3">
+<h3 class="anchored" data-anchor-id="randomforestclassifier-rfc">2.2.1 RandomForestClassifier (RFC)</h3>
+<p>RFC beskrivs av scikit-learn (2025b) som en meta-estimator (eller ensemble) som tränar ett visst antal beslutsträd. Ett beslutsträd består av noder av vilkas den första och översta benämns rotnod som leder vidare till inre noder och slutligen de yttersta noderna, lövnoder. Modellen utgår från ett tröskelvärde och om observationen är större eller lika med tröskelvärdet utvärderas till sant går modellen vänster och för falskt höger. Hyperparametrarna för modellen har ett satt standardvärde och kan ändras för att anpassa modellen till syftet och för att regularisera modellen. Fler beslutsträd (<em>n_estimators</em>) i modellen kan ge ett bättre och stabilare resultat men ökar samtidigt träningstiden. <em>max_depth</em> sätter hur långt trädet får växa och hur många prover varje nod ska innehålla bestäms av <em>min_samples_split</em>. Desto djupare och ju färre prover varje nod innehåller kan leda till överanpassning men samtidigt låta modellen hitta mer komplexa mönster i datamängden.</p>
+<p><em>Tabell 2‑1: Ett urval av hyperparametrar för RandomForestClassifier</em></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Hyperparameter (standardvärde)</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>n_estimators=100</td>
+<td>Antal beslutsträd i modellen</td>
+</tr>
+<tr class="even">
+<td>max_depth=None</td>
+<td>Maximalt djup för varje träd</td>
+</tr>
+<tr class="odd">
+<td>min_samples_split=2</td>
+<td>Minst antal</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="kneighborsclassifier-knc" class="level3">
+<h3 class="anchored" data-anchor-id="kneighborsclassifier-knc">2.2.2 KNeighborsClassifier (KNC)</h3>
+<p>Scikit-learn (2025c) förklarar att KNC till skillnad mot RandomForestClassifier jämför varje observation med de övriga observationerna och beräknar avståndet till dessa samt klassificerar observationen till den klass som är vanligast hos de närmsta observationerna (grannarna), genom en ”majoritetsröstning”. Hyperparametern <em>n_neighbors</em> bestämmer hur många grannobservationer som ska tas i beaktan vid klassificeringen och <em>weights</em> avgör i vilken omfattning de påverkar resultatet: <em>uniform</em> ger att samtliga grannar påverkar lika mycket medan <em>distance</em> gör att närmare grannar påverkar mer.</p>
+<p><em>Tabell 2‑2: Ett urval av hyperparametrar för KNeighborsClassifier</em></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Hyperparameter (standardvärde)</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>n_neighbors=5</td>
+<td>Antal grannobservationer som ska användas vid ”röstning”.</td>
+</tr>
+<tr class="even">
+<td>weights=’uniform’</td>
+<td>Vilken viktfunktion som ska användas vid prediktioner.</td>
+</tr>
+<tr class="odd">
+<td>metric=’minkowski’</td>
+<td>Utvärderingsmått som ska användas vid avståndsmätningen.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="supportvectorclassifier-svc" class="level3">
+<h3 class="anchored" data-anchor-id="supportvectorclassifier-svc">2.2.3 SupportVectorClassifier (SVC)</h3>
+<p>Prgomet (2025 s.176ff) sammanfattar att målet med en SVC är att hitta en så bred ”väg” mellan datapunkter från två olika klasser. En ”väg” är i en SVC en beslutsgräns med en stödvektor på vardera sida, där marginalen sätts i förhållande till närmst datapunkt från respektive klass. Enligt scikit-learn (2025d) kan man regularisera modellen genom <em>svc_c</em>, där ett högt värde gör att modellen försöker klassificera mer träningsdata rätt, vilket i sin tur ger en smalare marginal utifrån beslutsgränsen. Ett lägre värde tillåter fler felklassificeringar, vilket då ger en bredare marginal. <em>kernel</em> kan ställas in till att ha en linjär beslutsgräns eller icke-linjära beroende på hur komplex datamängden är.</p>
+<p><em>Tabell 2‑3: Ett urval av hyperparametrar för SVC</em></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Hyperparameter (standardvärde)</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>svc_c=1.0</td>
+<td>Regulariseringsparameter</td>
+</tr>
+<tr class="even">
+<td>kernel=’rbf’</td>
+<td>Sätter vilken kerneltyp som ska användas i algoritmen.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="logisticregressioncv-lr" class="level3">
+<h3 class="anchored" data-anchor-id="logisticregressioncv-lr">2.2.4 LogisticRegressionCV (LR)</h3>
+<p>Enligt Prgomet (2025 s.168) är en LR vid klassificering en modell som estimerar sannolikheten för att en datapunkt tillhör en viss klass. Modellen korsvaliderar genom att testa flera olika värden på regulariseringsparametern. För att ha en starkare regularisering anges ett lägre värde i <em>Cs</em>. <em>penalty</em> vilken typ av regularisering som används och <em>solver</em> specificerar vilken algoritm som ska användas för att hitta de bästa parametrarna.</p>
+<p><em>Tabell 2‑4: Ett urval av hyperparametrar för LogisticRegressionCV</em></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Hyperparameter (standardvärde)</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cs=10</td>
+<td>Regulariseringsstyrka</td>
+</tr>
+<tr class="even">
+<td>max_iter=100</td>
+<td>Max antal iterationer för algoritmen</td>
+</tr>
+<tr class="odd">
+<td>penalty=’l2’</td>
+<td>Normen för straff</td>
+</tr>
+<tr class="even">
+<td>solver=’lbfgs’</td>
+<td>Algoritm som ska användas vid optimeringen</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="standardscaler" class="level2">
+<h2 class="anchored" data-anchor-id="standardscaler">2.3 StandardScaler</h2>
+<p>StandardScaler normaliserar de oberoende variablerna i datamängden genom att ta bort medelvärdet och skalar till en varians lika med 1. De får alltså ett medelvärde av 0 och variansen 1. För att det inte ska läcka data mellan tränings- och testdatan används träningsdatan med metoden <em>fit_transform</em> medan testdatan endast använder <em>transform</em>. Vissa modeller är mer känsliga för om datamängden är normaliserad, bl.a. Support Vector Machines som SVC (scikit-learn 2025e).</p>
+</section>
+<section id="gridsearchcv" class="level2">
+<h2 class="anchored" data-anchor-id="gridsearchcv">2.4 GridSearchCV</h2>
+<p>GridSearchCV är enligt scikit-learn (2025f) en metod för att hitta de optimala hyperparametrarna för en eller flera modeller. Genom att ge metoden ett rutnät av olika hyperparametrar för en modell testar GridSearchCV med hjälp av korsvalidering vilken kombination av hyperparametrar som ger bäst resultat för just den datamängden.</p>
+</section>
+<section id="coco-annotering" class="level2">
+<h2 class="anchored" data-anchor-id="coco-annotering">2.5 COCO-annotering</h2>
+<p>På Labelformat (2025) sammanfattas COCO (Common Objects in Context)-annotering som ett storskaligt objektdetektionsformat som har utvecklats av Microsoft. Formatet har blivit ett accepterat format för objektdetektion och skrivs i JSON-filer. Formatet har tre huvudkomponenter:</p>
+<ul>
+<li><em>Images</em>, som definierar metadata för varje bild i datasetet, t.ex. bildens filnamn och storlek i pixlar.</li>
+<li><em>Categories</em>, som definierar objektklasser, t.ex. rubrik, text, figur, tabell.</li>
+<li><em>Annotations</em>, som definierar var ett objekt befinner sig och dess storlek, både rektangulärt och polynomt.</li>
+</ul>
+</section>
+<section id="bildkonvertering" class="level2">
+<h2 class="anchored" data-anchor-id="bildkonvertering">2.6 Bildkonvertering</h2>
+<p>För att kunna använda bilder i t.ex. jpg-format i modellträning behöver de konverteras i flera steg. Här ges en kort sammanfattning av de viktigaste stegen:</p>
+<ol type="1">
+<li>Konvertera bilderna till gråskala.</li>
+<li>Ändra storlek på bilderna för snabbare hantering och att matriserna inte ska ta för mycket plats. Detta är beror naturligtvis på mängden data i datasetet.</li>
+<li>Normalisera pixelvärdena från 0-255 till 0-1, för att både ge en maskininlärningsmodell bättre förutsättningar och att alla features får likvärdig betydelse vid träningen.</li>
+<li>Platta ut matrisen från två dimensioner till en.</li>
+</ol>
+<p><em>(Datacamp 2025, DevashishPrasad 2021 och scikit-learn 2025g)</em></p>
+</section>
+</section>
+<section id="metod" class="level1">
+<h1>3 Metod</h1>
+<p>I det här avsnittet ger jag en sammanfattning om vad den valda datamängden har för förutsättningar och hur jag bearbetade den, hur bilderna förbereddes inför modellträning och vilka steg som togs i samband med modellträningen. Vissa hänvisningar i det här avsnittet är till det projektets publicerade <em>repository</em> på GitHub med hänvisning till Svensson (2025) och i form av relevant filnamn.</p>
+<section id="datamängden-pub-lay-net" class="level2">
+<h2 class="anchored" data-anchor-id="datamängden-pub-lay-net">3.1 Datamängden Pub Lay Net</h2>
+<p>Datamängden Pub Lay Net är framtagen och publicerad av IMB och består av dokumentbilder med artiklar publicerade på PubMed Central Open Access Subset. Till varje bild finns annotationer på var i dokumentet rubrik, text, figurer, tabeller och listor finns. Annoteringen är gjord enligt COCO-formatet som nämns i 2.5. Från början hade datamängden drygt 335&nbsp;000 dokument och över 3 miljoner annotationer (Prasad 2021). Datamängden i den här undersökningen är hämtad från Kaggle.com och en sjundedel av originalet, bestående av knappt 48.000 dokument. Hur annotationerna ser ut exemplifieras i Tabell 3‑1 nedan. För tydlighetens skulle har jag tagit bort raden med datatyper samt kolumnerna <em>iscrowd</em>, <em>image_id</em>, <em>height</em>, <em>width</em> samt <em>supercategory</em>, vilka är mindre viktiga i förhållande till syftet med undersökningen. Vad de olika kolumnerna betyder är:</p>
+<ul>
+<li><em>segmentation</em> ger en lista av polygonkordinater, vilka definierar exakta pixelgränser för kategorin i fråga.</li>
+<li><em>area</em> visar segmentets area.</li>
+<li><em>bbox</em> ger minsta rektangel som omsluter objektet, mätt från övre vänstra hörnet.</li>
+<li><em>category_id</em> anger vilken kategori som objektet tillhör, vilket definieras i Category</li>
+<li><em>id</em> är den unika identifieraren för varje annotation.</li>
+<li><em>file_name</em> ger till vilket dokument observationen tillhör.</li>
+<li><em>name</em> anger till vilken kategori som category_id tillhör.</li>
+</ul>
+<p><em>Tabell 3‑1: Exempel på annotationer för datamängden</em></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>segmentation</th>
+<th>area</th>
+<th>bbox</th>
+<th>category_id</th>
+<th>id</th>
+<th>file_name</th>
+<th>name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>[[52.38, 444.87, … 444.87]]</td>
+<td>13787.43308252503600</td>
+<td>[40.42, 444.87, … 63.86]</td>
+<td>1</td>
+<td>0</td>
+<td>“PMC3866684_00003.jpg”</td>
+<td>“text”</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="databearbetning" class="level2">
+<h2 class="anchored" data-anchor-id="databearbetning">3.2 Databearbetning</h2>
+<p>Det första som gjordes för att kunna använda datamängden var att konvertera json-filen med annotationerna. Eftersom den inte hade anpassats till den mängd dokument som följde med datamängden var den väldigt stor och behövde konverteras i steg. Detta gjorde att polars och ijson behövde användas istället för pandas och json, eftersom dessa har en bättre förmåga att hantera stora datamängder. Samtidigt behövde konverteringen ske segmentvis för att hårdvaran skulle klara av konverteringen. Sedan behövde rader, som inte hade någon bild kopplad till sig, tas bort från dataframen, vilket gjordes genom ett skript som läste av vilka filnamn som fanns tillgängliga och filtrera dataframe efter dessa (Svensson 2025 – pln_data_preprocessing.py samt pln_delete_unused_data.ipynb). Detta resulterade i att 465.836 av 3.263.046 rader behölls.</p>
+<p>Eftersom ett av syftena med undersökningen var att träna en modell som kan avgöra om en sida är en förstasida eller inte, behövde dataframen kompletteras med denna information, då detta saknades från början. I filnamnet gick det att utläsa om en sida var förstasida eller inte: förstasidor hade ändelsen 00000, medan övriga sidor hade en siffra större än 0 i sista ledet. Genom att läsa av filerna kunde alltså kolumnen title_page med 1 (Sant) och 0 (Falskt) läggas till (pln_add_title_page.ipynb). Sedan rensades dataframe på data som inte behövdes för det binära problemet (pln_title_df.ipynb), vilket gav en datframe med två kolumner: file_name (str) och title_page (bool).</p>
+<p>Avslutningsvis togs ett utsnitt om 500 observationer för att kunna göra snabbare träning av modeller vid det utforskande steget, där modeller skulle utvärderas mot varandra. När utsnittet gjordes skedde det med stratifierad uppdelning, eftersom förstasidorna är underrepresenterade i datamängden (pln_mini_batch.ipynb).</p>
+</section>
+<section id="bildbearbetning" class="level2">
+<h2 class="anchored" data-anchor-id="bildbearbetning">3.3 Bildbearbetning</h2>
+<p>När bilderna bearbetades följdes stegen som nämns i 2.6 genom att först konvertera dem till gråskala. Eftersom målet var att kunna träna en modell på samtliga dokument förminskades också samtliga bilder till 128x128 pixlar från ursprungliga 612x792 pixlar, för att kunna träna modellen på hela datamängden snabbare. Sedan normaliserades pixelvärdena från 0-255 till 0-1. Och till slut plattades arrayen ut till en endimensionell array. För att se ett hur bilderna efter konverteringen såg ut gjordes också en visualisering som syns i Figur 3‑1 (pln_image_downscaling.ipynb).</p>
+<p><img src="media/converted_picures.png" class="img-fluid" width="600"></p>
+<p><em>Figur 3‑1: Konverterade bilder</em></p>
+<p>Ett skript gjordes också för att konvertera samtliga bilder men med bibehållen storlek, vilket fick göras med ett utsnitt om 1000 bilder, eftersom en konvertering av samtliga bilder hade gett en array om cirka en terabyte, vilket inte hade varit möjligt (pln_image_konverting.py)</p>
+</section>
+<section id="modellträning" class="level2">
+<h2 class="anchored" data-anchor-id="modellträning">3.4 Modellträning</h2>
+<p>Avsnittet är uppdelat i två delar, dels de utforskande stegen som gjordes med flera olika modeller på urvalet om 500 observationer, dels de bäst presterande modellerna och hur dessa användes vidare. För resultat se Resultat och Diskussion.</p>
+<section id="utforskande-steg" class="level3">
+<h3 class="anchored" data-anchor-id="utforskande-steg">3.4.1 Utforskande steg</h3>
+<p>De utforskande stegen gjordes som nämnts på det mindre urvalet av datamängden. De modeller som användes i det här steget var KNC, RFC, SVC och LR, vilka har förklarats i 2.2. Datamängden delades upp i tränings- och testdata för både X och y med stratifiering, eftersom förstasidor är underrepresenterade. Sedan normaliserades träningsdatan med StandardScaler och dess metod fit_transform, vilket också applicerades på testdatan med transform. För att hitta de bäst presterande hyperparametrarna för varje modell skapades en <em>dictionary</em> som hämtade in modellerna och de hyperparametrarna som skulle utvärderas, vilka sedan användes i GridSearchCV. Utifrån resultaten i F1-score, recall och precision samt confusion matrix gjordes sedan en jämförelse mellan de olika modellerna och hur ett lägre tröskelvärde påverkade modellerna RFC och KNCs resultat. För den förra testades också att visualisera <em>feature importance</em>. (Svensson 2025 – pln_exploratory_model_training.ipynb).</p>
+</section>
+<section id="vidare-träning-med-rfc-och-knc" class="level3">
+<h3 class="anchored" data-anchor-id="vidare-träning-med-rfc-och-knc">3.4.2 Vidare träning med RFC och KNC</h3>
+<p>De två bäst presterande modellerna RFC och KNC gjordes ytterligare utforskning på hur tröskelvärdet kunde ställas in för bättre resultat och hur de presterade när utfallet av feature importance implementerades genom att endast behålla de översta 40 raderna i varje observation (pln_exploratory_model_training_knc.ipynb och pln_exploratory_model_training_rfc.ipynb). Sedan kombinerades dessa modeller i en pipeline för att utvärdera vilka observationer som de predikterade korrekt först genom VotingClassifier och sedan genom att göra en ensemble av de två modellernas positiva prediktioner, i vilken en positiv prediktion från någon av modellerna prioriterades över en negativ prediktion (pln_observation_prediction_knc_rfc.ipynb).</p>
+</section>
+<section id="slutgiltig-modell" class="level3">
+<h3 class="anchored" data-anchor-id="slutgiltig-modell">3.4.3 Slutgiltig modell</h3>
+<p>Den slutgiltiga modellen sammanställdes i två python-skript ett med PCA och ett utan för att även här jämföra om de presterade olika, men också för att ha ett alternativ för snabbare träning. Delar som ingick i den slutgiltiga modeller, förutom databearbetning som redan var gjord, var:</p>
+<ul>
+<li>Behålla de översta 40 raderna av bilden</li>
+<li>Strategisk uppdelning av tränings- och testdata</li>
+<li>Normalisering av tränings- och testdata</li>
+<li>Träna KNC med hyperparametrarna metric=’minkowski’, n_neighbors=2, weights=’distance’, samt övriga hyperparametrar med standardvärde.</li>
+<li>Träna RandomForestClassifier med hyperparametrarna max_depth=None, min_sample_split=5, n_estimators=150, samt övriga hyperparametrar med standardvärde.</li>
+<li>Tröskelvärde = 0.4</li>
+<li>Ensemble-prediktion där en positiv prediktion prioriterades över en negativ prediktion</li>
+</ul>
+<p><em>(pln_first_page_model_128x128.py samt pln_first_page_model_128x128_pca)</em></p>
+</section>
+</section>
+</section>
+<section id="resultat-och-diskussion" class="level1">
+<h1>4 Resultat och Diskussion</h1>
+<p>I den första träningsrundan i det utforskande steget gav modellerna följande resultat:</p>
+<p><strong>Tabell 4‑1: RFC första träningen</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.52</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.95</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.73</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_1_rcf.png" class="img-fluid" width="250"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑2: KNC första träningen</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.67</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.96</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.81</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_1_knc.png" class="img-fluid" width="250"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑3: SVC första träningen</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.32</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.94</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.63</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_1_svc.png" class="img-fluid" width="250"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑4: LR första träningen</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.43</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.94</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.69</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_1_lr.png" class="img-fluid" width="250"></p>
+</div>
+</div>
+</div>
+<p>Utifrån resultaten ovan kan man dra slutsatsen att modellerna LR och SVC presterade väldigt mycket sämre än RFC och KNC. Därför utgick jag från att fortsätta med de två sistnämnda.</p>
+<p>Som jag nämnde ovan gjordes också en feature importance för RFC vilket visualiseras i Figur 4‑1. Här blir det tydligt att de pixelrader som ligger i spannet mellan rad 0 och 40 är viktigare än övriga. Därav valdes att endast behålla rad 0-40 när modellerna skulle klassificera en bild till en förstasida eller inte.</p>
+<p><img src="media/heat_map_features.png" class="img-fluid" width="350"></p>
+<p><em>Figur 4‑1: Feature importance, RandomForestClassifier</em></p>
+<p>Nästa steg blev att testa vilka tröskelvärden som gav ett bättre resultat. Detta med premissen att det är bättre att modellen hittar fler förstasidor och att några fler icke-förstasidor hamnar i fel klass, som i precision och recall-avvägningen. Tre tröskelvärden testades med RFC, vilket gav följande resultat:</p>
+<p><strong>Tabell 4‑5: RFC med anpassat tröskelvärde</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.88</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.98</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.93</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_rfc_t02.png" class="img-fluid" width="350"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑6: RFC med anpassat tröskelvärde</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.89</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.98</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.94</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_rfc_t03.png" class="img-fluid" width="350"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑7: RFC med anpassat tröskelvärde</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.97</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.89</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_rfc_t04.png" class="img-fluid" width="350"></p>
+</div>
+</div>
+</div>
+<p>Utifrån resultaten syns att ett tröskelvärde på 0.3 för RFC ger det stabilaste resultatet. Samma gjordes med KNC, vilket gav resultaten:</p>
+<p><strong>Tabell 4‑8: KNC med anpassat tröskelvärde</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.77</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.97</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.86</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_knc_t02.png" class="img-fluid" width="350"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑9: KNC med anpassat tröskelvärde</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.97</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.86</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_knc_t05.png" class="img-fluid" width="350"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑10: KNC med anpassat tröskelvärde</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.94</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.68</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_knc_t06.png" class="img-fluid" width="350"></p>
+</div>
+</div>
+</div>
+<p>Som syns i en utvärdering av olika tröskelvärden för KNC är modellen inte lika känslig och det är först när tröskelvärdet går över 0.5 som resultaten blir sämre. I spannet 0.1-0.5 ger modellen liknande resultat.</p>
+<p>Ett sista utforskande steg var att se hur de här två modellerna kunde kombineras till en slutlig modell. Här fanns det en tanke om att utnyttja varje modells styrka, dvs låta en slutgiltig modell ta prediktioner från den modell som predikterade dem rätt. Detta visualiserades enligt följande:</p>
+<p><img src="media/pred_knc_rfc.png" class="img-fluid" width="600"></p>
+<p><em>Figur 4‑2: Prediktioner från RFC och KNC</em></p>
+<p>Här syns det att ingen modell kunde prediktera observation 9 eller 34 korrekt medan RFC kunde prediktera observation 10, 14 och 72 korrekt medan KNC predikterade dem fel, samtidigt som bara KNC predikterade observation 79 korrekt. Utifrån detta kan man alltså anta att en kombinerad modell skulle kunna dra nytta av respektive modells positiva prediktioner, alltså de fall som de predikterade en sida som förstasida. Som nämndes ovan i 3.4.2 testades en Voting-modell men den presterade inte så mycket bättre än varje enskild modell. Därför testade istället en ensemble-modell, i vilken varje modells positiva prediktion prioriterades över en negativa prediktion, vilket gav följande resultat:</p>
+<p><strong>Tabell 4‑11: KNC och RFC ensemble resultat med tröskelvärde om 0.3</strong> ::: {layout=“[[50,50]]”}</p>
+<div class="column">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Klasser</th>
+<th>F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Förstasida</td>
+<td>0.52</td>
+</tr>
+<tr class="even">
+<td>Ej förstasida</td>
+<td>0.95</td>
+</tr>
+<tr class="odd">
+<td>Medelvärde</td>
+<td>0.73</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column">
+<p><img src="media/cm_1_rcf.png" class="img-fluid" width="250"></p>
+</div>
+<p>::: När till slut den slutgiltiga modellen tränades på all data gav fick jag ändra tröskelvärdet till 0.4, eftersom 0.25 gav följande:</p>
+<p><strong>Tabell 4‑12: KNC och RFC ensemble resultat med tröskelvärde om 0.25</strong></p>
+<div class="quarto-layout-panel" data-layout="[[60,40]]">
+<div class="quarto-layout-row">
+<div class="column quarto-layout-cell" style="flex-basis: 60.0%;justify-content: center;">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Klasser</th>
+<th style="text-align: left;">F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Förstasida</td>
+<td style="text-align: left;">0.92</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ej förstasida</td>
+<td style="text-align: left;">0.99</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Medelvärde</td>
+<td style="text-align: left;">0.96</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column quarto-layout-cell" style="flex-basis: 40.0%;justify-content: center;">
+<p><img src="media/cm_knc_rfc_t025_final.png" class="img-fluid" width="350"></p>
+</div>
+</div>
+</div>
+<p><strong>Tabell 4‑13: KNC och RFC ensemble resultat med tröskelvärde om 0.4</strong> ::: {layout=“[[60,40]]”}</p>
+<div class="column">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Klasser</th>
+<th>F1-score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Förstasida</td>
+<td>0.96</td>
+</tr>
+<tr class="even">
+<td>Ej förstasida</td>
+<td>0.99</td>
+</tr>
+<tr class="odd">
+<td>Medelvärde</td>
+<td>0.98</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="column">
+<p><img src="media/cm_knc_rfc_t04_final.png" class="img-fluid" width="350"></p>
+</div>
+<p>:::</p>
+<p>Med första tröskelvärdet på 0.25 predikterades alltså många icke-förstasidor som förstasidor och genom att testa lite olika tröskelvärden blev 0.4 en balanserad modell.</p>
+</section>
+<section id="slutsatser" class="level1">
+<h1>5 Slutsatser</h1>
+<p>Utifrån de tre inledande frågeställningarna är två besvarade i den här undersökningen:</p>
+<ol type="1">
+<li>Hur bör en förhållandevis stor datamängd bestående av inskannade dokument bearbetas, så att en modell kan tränas på den?</li>
+<li>Vilken modell eller kombination av modeller (<em>ensemble</em>) ger högst f1-score och samtidigt få <em>falska negativa</em> när en modell ska avgöra om en sida i en text är förstasida eller inte?</li>
+</ol>
+<p>Fråga ett bör besvaras med ”det beror på”, just när det kommer till förutsättningar i datamängden, som omfattning, syfte och tidsåtgång. Men generellt, vilket kan ses i rapporten behöver datamängden utforskas så att man får fram vilken data som är relevant, som översta 40 raderna för rubriker. Sedan behöver bilderna konverteras till arrayer så att en maskininlärningsmodell kan förstå den data som representerar bilden, samtidigt som varje pixel förenklas men ändå tillför så pass mycket information som är nödvändigt för modellen.</p>
+<p>I fråga två utgick jag från fyra modeller med lite andra verktyg som GridSearch och PCA, men en kombination av modeller gav ett bättre resultat och just i det här fallet och med den här typen av data var det RFC och KNC med en ensemble-prediktion, som prioriterade en modells positiva prediktion över en negativ.</p>
+<p>Målet i undersökningen var att också genomföra fråga tre:</p>
+<ol start="3" type="1">
+<li>Hur använder man annotationer i samband med maskininlärning?</li>
+</ol>
+<p>Men på grund av tidsbrist hanns detta inte med. Däremot är detta något som jag kommer att jobba vidare med i senare projekt. Ytterligare tankar som skulle kunna förbättra modellen är att annotationerna skulle behöva skalas ned så att de passar 128x128-formatet, eftersom konvertering av bilderna till arrayer i fullstorlek kräver mycket RAM och HDD-utrymme. Modellen skulle också kunna förbättras genom att skriptet tar hand om osäkra prediktioner på något sätt, alltså de prediktioner som hamnar i FN. Det skulle också vara intressant att titta vidare på de prediktioner som hamnar i ensemble-prediktionen, där modellerna inte är överens.</p>
+</section>
+<section id="självutvärdering" class="level1">
+<h1>6 Självutvärdering</h1>
+<ol type="1">
+<li>Vad har varit roligast i kunskapskontrollen?</li>
+</ol>
+<p>Att hitta lösningar på problem som jag inte visste att jag skulle stöta på från början, som t.ex: hur mycket HDD-utrymme som en stor datamängd kan ta när den konverteras till en array, beroende på storleken på den ursprungliga bilden. Många problem behövde lösas i samband med datahanteringen, både i förhållande till omfånget av bilder och annotationer.</p>
+<ol start="2" type="1">
+<li>Vilket betyg anser du att du ska ha och varför?</li>
+</ol>
+<p>VG: Jag tycker att jag med examinationen har uppvisat att jag har den kunskap som behövs för att uppnå betygskriterierna för VG i kursen:</p>
+<ul>
+<li>visa förmåga att resonera kring eget val av lösningsmetod</li>
+<li>reflektera och analysera för att lösa problem med hög säkerhet utifrån dess förutsättningar, risker, begränsningar, effekter, resultat och förbättringsmöjligheter.</li>
+</ul>
+<ol start="3" type="1">
+<li>Vad har varit mest utmanande i arbetet och hur har du hanterat det?</li>
+</ol>
+<p>Mängden begrepp, inte bara det teoretiska inom ML utan också detaljerna för alla de verktyg som har introducerats, från hur en modell i scikit-learn fungerar med alla hyperparametrar till alla sätt att utvärdera en modell beroende på problemtyp.</p>
+<ol start="4" type="1">
+<li>Hur har grupparbetet gått?</li>
+</ol>
+<p>Arbetade ju inte så mycket i grupp, men diskussionen gick väl.</p>
+<p>/</p>
+</section>
+<section id="källförteckning" class="level1">
+<h1>Källförteckning</h1>
+<p>Datacamp (2025): <a href="https://www.datacamp.com/doc/numpy/converting-images-to-numpy">https://www.datacamp.com/doc/numpy/converting-images-to-numpy</a></p>
+<p>DevashishPrasad (2021): <a href="https://github.com/DevashishPrasad/CascadeTabNet">https://github.com/DevashishPrasad/CascadeTabNet</a></p>
+<p>Labelformat (2025): <a href="https://labelformat.com/formats/object-detection/coco/">https://labelformat.com/formats/object-detection/coco/</a></p>
+<p>Prgomet, A., Johnson, T., Solberg, A. &amp; Rundberg Streuli, L. (2025). Lär dig AI från grunden – Tillämpad maskininlärning med Python.</p>
+<p>Prasad, Devashish (2021): <a href="https://www.kaggle.com/datasets/devashishprasad/documnet-layout-recognition-dataset-Pub%20Lay%20Net-t0/data">https://www.kaggle.com/datasets/devashishprasad/documnet-layout-recognition-dataset-publaynet-t0/data</a></p>
+<p>scikit-learn (2025a) : <a href="https://scikit-learn.org/stable/modules/model_evaluation.html">https://scikit-learn.org/stable/modules/model_evaluation.html</a></p>
+<p>scikit-learn (2025b): <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier</a></p>
+<p>scikit-learn (2025c): <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn.neighbors.KNeighborsClassifier">https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn.neighbors.KNeighborsClassifier</a></p>
+<p>scikit-learn(2025d): <a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC">https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC</a></p>
+<p>scikit-learn(2025e): <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn.preprocessing.StandardScaler">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn.preprocessing.StandardScaler</a></p>
+<p>scikit-learn (2025f): <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html">https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html</a></p>
+<p>scikit-learn (2025g): <a href="https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html">https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html</a></p>
+<p>Svensson, Peter (2025): <a href="https://github.com/fendraq/ml_application_documents.git">https://github.com/fendraq/ml_application_documents.git</a></p>
+</section>
+<section id="figurförteckning" class="level1">
+<h1>Figurförteckning</h1>
+<ul>
+<li><a href="#_Ref209601776">Figur 2‑1 - Confusion Matrix</a></li>
+<li><a href="#_Ref209773955">Figur 2‑2: Exempel på F1-score</a></li>
+<li><a href="#_Ref209694525">Figur 3‑1: Konverterade bilder</a></li>
+<li><a href="#_Toc209780323">Figur 4‑1: Feature importance, RandomForestClassifier</a></li>
+<li><a href="#_Toc209780324">Figur 4‑2: Prediktioner från RFC och KNC</a></li>
+</ul>
+</section>
+<section id="tabellförteckning" class="level1">
+<h1>Tabellförteckning</h1>
+<ul>
+<li><a href="#_Toc209780486">Tabell 2‑1: Ett urval av hyperparametrar för RandomForestClassifier</a></li>
+<li><a href="#_Toc209780487">Tabell 2‑2: Ett urval av hyperparametrar för KNeighborsClassifier</a></li>
+<li><a href="#_Toc209780488">Tabell 2‑3: Ett urval av hyperparametrar för SVC</a></li>
+<li><a href="#_Ref209689973">Tabell 3‑1: Exempel på annotationer för datamängden</a></li>
+<li><a href="#_Toc209780490">Tabell 4‑1: RFC första träningen</a></li>
+<li><a href="#_Toc209780491">Tabell 4‑2: KNC första träningen</a></li>
+<li><a href="#_Toc209780492">Tabell 4‑3: SVC första träningen</a></li>
+<li><a href="#_Toc209780493">Tabell 4‑4: LR första träningen</a></li>
+<li><a href="#_Toc209780494">Tabell 4‑5: RFC med anpassat tröskelvärde</a></li>
+<li><a href="#_Toc209780495">Tabell 4‑6: RFC med anpassat tröskelvärde</a></li>
+<li><a href="#_Toc209780496">Tabell 4‑7: RFC med anpassat tröskelvärde</a></li>
+<li><a href="#_Toc209780497">Tabell 4‑8: KNC med anpassat tröskelvärde</a></li>
+<li><a href="#_Toc209780498">Tabell 4‑9: KNC med anpassat tröskelvärde</a></li>
+<li><a href="#_Toc209780499">Tabell 4‑10: KNC med anpassat tröskelvärde</a></li>
+<li><a href="#_Toc209780500">Tabell 4‑11: KNC och RFC ensemble resultat med tröskelvärde om 0.3</a></li>
+<li><a href="#_Toc209780501">Tabell 4‑12: KNC och RFC ensemble resultat med tröskelvärde om 0.25</a></li>
+<li><a href="#_Toc209780502">Tabell 4‑13: KNC och RFC ensemble resultat med tröskelvärde om 0.4</a></li>
+</ul>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

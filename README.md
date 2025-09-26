@@ -1,5 +1,11 @@
 # Exploring Pub Lay Net Assignment
 
+## Dataset origin
+The dataset Pub Lay Net is available through kaggle.com:
+https://www.kaggle.com/datasets/devashishprasad/documnet-layout-recognition-dataset-publaynet-t0/data
+
+It is good to know that the json contains all annotation, even for those documents that aren't included from kaggle.com, why 2797208 rows should be deleted before using.
+
 ## Purpose
 This project is an exploration of how to prepare a large dataset for model training with the purpose of identifying title pages and text elements.
 
